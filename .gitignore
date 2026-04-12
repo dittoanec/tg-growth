@@ -1,0 +1,10 @@
+.env
+node_modules/
+dist/
+*.session
+channel_data.json
+tracked_channels.json
+tracked_list.json
+public/channel_data.json
+public/tracked_channels.json
+.claude/settings.local.json
