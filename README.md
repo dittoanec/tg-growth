@@ -7,7 +7,7 @@ AI-powered growth analytics for your Telegram channel. Collect real post metrics
 ## Two Ways to Use This
 
 ### 🧠 Option A: Claude Skill (Recommended)
-Talk to Claude in plain language to analyze your channel, collect data, and get growth insights — right from your terminal or Claude.ai. Claude reads your channel data and does the thinking for you.
+Talk to Claude in plain language to analyze your channel, collect data, and get growth insights. Claude reads your channel data and does the thinking for you.
 
 ### 📊 Option B: Local Dashboard
 A visual React dashboard at `localhost:5173` with charts, AI analysis cards, and agent second opinions.
@@ -27,165 +27,138 @@ A visual React dashboard at `localhost:5173` with charts, AI analysis cards, and
         - - *"Start the dashboard"*
           - - *"Track @competitorchannel"*
            
-            - ### Installation
+            - ### Install the skill (one command)
            
-            - **Step 1: Clone the repo**
             - ```bash
-              git clone https://github.com/dittoanec/tg-growth
-              cd tg-growth
+              mkdir -p ~/.claude/skills/tg-growth && \
+              curl -fsSL https://raw.githubusercontent.com/dittoanec/tg-growth/main/.claude/skills/tg-growth/SKILL.md \
+                -o ~/.claude/skills/tg-growth/SKILL.md
               ```
 
-              **Step 2: Copy the skill file to your Claude skills folder**
-              ```bash
-              mkdir -p ~/.claude/skills/tg-growth
-              cp .claude/skills/tg-growth/SKILL.md ~/.claude/skills/tg-growth/SKILL.md
-              ```
+              That's it. Open Claude and say **"analyze my Telegram channel"** — Claude will pick up the skill and walk you through the rest.
 
-              **Step 3: Configure your keys**
-              ```bash
-              cp .env.example .env
-              ```
+              ### What Claude will ask you on first use:
+              1. Where you cloned or downloaded the project
+              2. 2. Your Telegram channel username
+                 3. 3. Your API keys (see below)
+                   
+                    4. ### Getting Your Keys
+                   
+                    5. | Key | Where to get it |
+                    6. |-----|----------------|
+                    7. | `TG_API_ID` + `TG_API_HASH` | [my.telegram.org](https://my.telegram.org) → API development tools → Create app |
+                    8. | `CLAUDE_API_KEY` | [console.anthropic.com](https://console.anthropic.com) → API Keys |
+                    9. | `COLLECTOR_TOKEN` | Make up any random string |
+                   
+                    10. ### Setting up the project (one-time)
+                   
+                    11. ```bash
+                        git clone https://github.com/dittoanec/tg-growth
+                        cd tg-growth
+                        cp .env.example .env
+                        # Edit .env and fill in your keys
+                        npm install
+                        pip3 install telethon python-dotenv
+                        python3 collect_data.py  # first data collection — will ask for phone + OTP once
+                        ```
 
-              Edit `.env` and fill in:
-              ```env
-              CHANNEL_USERNAME=your_channel_username
-              TG_API_ID=12345678
-              TG_API_HASH=abcdef1234567890abcdef
-              CLAUDE_API_KEY=sk-ant-...
-              COLLECTOR_TOKEN=any-random-string
-              VITE_COLLECTOR_TOKEN=same-random-string-as-above
-              ```
-
-              **Step 4: Install dependencies**
-              ```bash
-              npm install
-              pip3 install telethon python-dotenv
-              ```
-
-              **Step 5: First data collection**
-              On first run, Telethon will ask for your phone number + a Telegram OTP to authenticate. This is a one-time step.
-              ```bash
-              python3 collect_data.py
-              ```
-
-              After that, open Claude and say **"analyze my Telegram channel"** — Claude will pick up the skill automatically.
-
-              ### Getting Your Keys
-
-              | Key | Where to get it |
-              |-----|----------------|
-              | `TG_API_ID` + `TG_API_HASH` | [my.telegram.org](https://my.telegram.org) → API development tools → Create app |
-              | `CLAUDE_API_KEY` | [console.anthropic.com](https://console.anthropic.com) → API Keys |
-              | `COLLECTOR_TOKEN` | Make up any random string |
-
-              > ⚠️ **Security:** `.env` and `tg_growth_session.session` are in `.gitignore`. Never commit them — the session file is full Telegram account access.
-              >
-              > ---
-              >
-              > ## Option B: Local Dashboard
-              >
-              > **1. Install dependencies**
-              > ```bash
-              > npm install
-              > pip3 install telethon python-dotenv
-              > ```
-              >
-              > **2. Set up your keys**
-              > ```bash
-              > cp .env.example .env
-              > ```
-              >
-              > **3. Collect your data**
-              > ```bash
-              > python3 collect_data.py
-              > ```
-              >
-              > **4. Run the dashboard**
-              > ```bash
-              > npm run dev
-              > ```
-              > Opens at http://localhost:5173
-              >
-              > **5. (Optional) Run the collector backend for live refresh**
-              > ```bash
-              > python3 collect_data.py --serve
-              > ```
-              > Runs on http://localhost:3456
-              >
-              > ### Dashboard Features
-              >
-              > | Tab | What's inside |
-              > |-----|--------------|
-              > | 👥 **Audience** | Persona Analysis, Reaction Decoder, Persona Drift, Unified Profile |
-              > | 📝 **Content** | Engagement Patterns, Content Gap Report, 7-day Calendar |
-              > | 🔍 **Network** | Forward Chains, Tracked Channels, Topic Shift Radar |
-              > | 📡 **Overview** | Subscriber Signal Analyzer, quick stats |
-              > | ⚙️ **Settings** | API keys, channel config, Slack webhook |
-              >
-              > Each analysis card has **3 AI agent second opinions:**
-              > - 📈 Growth Strategist
-              > - - 📊 Data Analyst
-              >   - - 🎯 Audience Researcher
-              >    
-              >     - ---
-              >
-              > ## How Data Collection Works
-              >
-              > Uses **Telethon (MTProto)** — not the Bot API — because:
-              > - The Bot API cannot read channel post history
-              > - - The Bot API cannot access view counts, forward counts, or reactions
-              >   - - Only MTProto can pull full channel history with all metrics
-              >    
-              >     - On first run, Telethon asks for your phone number + a Telegram OTP. After that, the session file handles auth automatically.
-              >    
-              >     - ---
-              >
-              > ## Slack Integration (Optional)
-              >
-              > Add your Slack webhook to `.env` or the Settings tab:
-              > ```env
-              > VITE_SLACK_WEBHOOK=https://hooks.slack.com/services/...
-              > ```
-              >
-              > Auto-posts: persona updates, weekly gap reports, topic shift radar, content calendars.
-              >
-              > ---
-              >
-              > ## Architecture
-              >
-              > ```
-              > Local browser (Vite + React)
-              > ├── python3 collect_data.py --serve  (port 3456)
-              > │   ├── Telethon MTProto  →  reads your Telegram channel
-              > │   ├── Claude API (server-side)  →  powers AI analysis
-              > │   └── channel_data.json  →  local data store
-              > └── npm run dev  (port 5173)  →  dashboard UI
-              > ```
-              >
-              > No cloud backend. Everything runs on your machine.
-              >
-              > ---
-              >
-              > ## Troubleshooting
-              >
-              > **pip3 asks for Xcode on macOS**
-              > Download Command Line Tools manually:
-              > 1. Go to [developer.apple.com/download/all/](https://developer.apple.com/download/all/)
-              > 2. 2. Search "Command Line Tools", download the `.dmg`
-              >    3. 3. Run the `.pkg` installer
-              >       4. 4. Re-run `pip3 install telethon`
-              >         
-              >          5. **Port already in use**
-              >          6. ```bash
-              >             lsof -ti :5173 | xargs kill -9
-              >             lsof -ti :3456 | xargs kill -9
-              >             ```
-              >
-              > **Telethon session expired**
-              > Delete `tg_growth_session.session` and re-run `python3 collect_data.py`.
-              >
-              > **Dashboard shows "No real post data"**
-              > ```bash
-              > python3 collect_data.py
-              > cp channel_data.json public/channel_data.json
-              > ```
+                        > ⚠️ **Security:** `.env` and `tg_growth_session.session` are in `.gitignore`. Never commit them — the session file is full Telegram account access.
+                        >
+                        > ---
+                        >
+                        > ## Option B: Local Dashboard
+                        >
+                        > **1. Clone and install**
+                        > ```bash
+                        > git clone https://github.com/dittoanec/tg-growth
+                        > cd tg-growth
+                        > npm install
+                        > pip3 install telethon python-dotenv
+                        > ```
+                        >
+                        > **2. Configure**
+                        > ```bash
+                        > cp .env.example .env
+                        > # Fill in your keys
+                        > ```
+                        >
+                        > **3. Collect data**
+                        > ```bash
+                        > python3 collect_data.py
+                        > ```
+                        >
+                        > **4. Run**
+                        > ```bash
+                        > npm run dev          # dashboard at http://localhost:5173
+                        > python3 collect_data.py --serve  # optional: live refresh API at http://localhost:3456
+                        > ```
+                        >
+                        > ### Dashboard Tabs
+                        >
+                        > | Tab | What's inside |
+                        > |-----|--------------|
+                        > | 👥 **Audience** | Persona Analysis, Reaction Decoder, Persona Drift, Unified Profile |
+                        > | 📝 **Content** | Engagement Patterns, Content Gap Report, 7-day Calendar |
+                        > | 🔍 **Network** | Forward Chains, Tracked Channels, Topic Shift Radar |
+                        > | 📡 **Overview** | Subscriber Signal Analyzer, quick stats |
+                        > | ⚙️ **Settings** | API keys, channel config, Slack webhook |
+                        >
+                        > Each card has **3 AI agent second opinions:** 📈 Growth Strategist, 📊 Data Analyst, 🎯 Audience Researcher.
+                        >
+                        > ---
+                        >
+                        > ## How Data Collection Works
+                        >
+                        > Uses **Telethon (MTProto)** — not the Bot API — because:
+                        > - The Bot API cannot read channel post history
+                        > - - The Bot API cannot access view counts, forward counts, or reactions
+                        >   - - Only MTProto can pull full channel history with all metrics
+                        >    
+                        >     - On first run, Telethon asks for your phone number + a Telegram OTP. After that, the session file handles auth automatically.
+                        >    
+                        >     - ---
+                        >
+                        > ## Slack Integration (Optional)
+                        >
+                        > ```env
+                        > VITE_SLACK_WEBHOOK=https://hooks.slack.com/services/...
+                        > ```
+                        >
+                        > Auto-posts: persona updates, weekly gap reports, topic shift radar, content calendars.
+                        >
+                        > ---
+                        >
+                        > ## Architecture
+                        >
+                        > ```
+                        > Local browser (Vite + React)
+                        > ├── python3 collect_data.py --serve  (port 3456)
+                        > │   ├── Telethon MTProto  →  your Telegram channel
+                        > │   ├── Claude API (server-side)  →  AI analysis
+                        > │   └── channel_data.json  →  local data store
+                        > └── npm run dev  (port 5173)  →  dashboard UI
+                        > ```
+                        >
+                        > No cloud backend. Everything runs on your machine.
+                        >
+                        > ---
+                        >
+                        > ## Troubleshooting
+                        >
+                        > **pip3 asks for Xcode on macOS**
+                        > Download Command Line Tools manually: [developer.apple.com/download/all/](https://developer.apple.com/download/all/) → search "Command Line Tools" → download the `.dmg` → run the `.pkg`
+                        >
+                        > **Port already in use**
+                        > ```bash
+                        > lsof -ti :5173 | xargs kill -9
+                        > lsof -ti :3456 | xargs kill -9
+                        > ```
+                        >
+                        > **Telethon session expired**
+                        > Delete `tg_growth_session.session` and re-run `python3 collect_data.py`
+                        >
+                        > **Dashboard shows "No real post data"**
+                        > ```bash
+                        > python3 collect_data.py
+                        > cp channel_data.json public/channel_data.json
+                        > ```
