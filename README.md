@@ -1,5 +1,68 @@
 # ✈️ Telegram Growth Intelligence
 
+
+Understand your Telegram channel audience, see what content works, track other channels, and get a growth plan — powered by AI. Everything runs on your own computer. No subscription, no cloud.
+
+
+> ⏱️ Setup takes about 15–20 minutes the first time.
+
+
+---
+
+
+## What does this actually do?
+
+
+This tool has **3 specific features**. It's not a general assistant — each feature does one focused thing:
+
+
+---
+
+
+### 👥 1. Audience Persona Analysis
+Reads your last 200 posts and figures out who your audience actually is based on how they engage.
+
+
+**What you get:**
+- A profile of your typical follower (interests, content preferences, engagement style)
+- Which post formats they respond to most (text, photo, video)
+- Which topics get the most reactions vs. forwards
+- How your audience has shifted over the past few months
+
+
+**How to use it:** Say *"analyze my audience"* in Claude after setup
+
+
+---
+
+
+### 📊 2. Content Performance Report
+Looks at what you've already posted and ranks it by real metrics.
+
+
+**What you get:**
+- Your top 10 posts by views, with a breakdown of why they worked
+- Your top 5 most-forwarded posts (the ones people shared to other channels)
+- Patterns across your best content — common topics, formats, posting times
+- Gaps — topics your audience wants but you haven't covered yet
+
+
+**How to use it:** Say *"analyze my content performance"* in Claude
+
+
+
+---
+
+
+### 🔍 3. Channel Network Analysis
+Tracks which other Telegram channels are amplifying your content.
+
+
+**What you get:**
+- A list of channels that have forwarded your posts
+- How many members those channels have (your potential reach)
+- Which of your posts get forwarded most and by whom# ✈️ Telegram Growth Intelligence
+
 Understand your Telegram channel audience, see what content works, track other channels, and get a weekly growth plan — powered by AI. Everything runs on your own computer. No subscription, no cloud.
 
 > ⏱️ Setup takes about 15–20 minutes the first time.
