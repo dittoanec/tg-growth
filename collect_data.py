@@ -35,7 +35,7 @@ if os.path.exists(_env_path):
 # ─── CONFIG ───
 API_ID = os.environ.get("TG_API_ID", "")
 API_HASH = os.environ.get("TG_API_HASH", "")
-CHANNEL = os.environ.get("TG_CHANNEL", "davidanecdotekr")
+CHANNEL = os.environ.get("CHANNEL_USERNAME") or os.environ.get("TG_CHANNEL", "")
 COLLECTOR_TOKEN = os.environ.get("COLLECTOR_TOKEN", "")
 CLAUDE_API_KEY = os.environ.get("CLAUDE_API_KEY", "") or os.environ.get("VITE_CLAUDE_API_KEY", "")
 OUTPUT_FILE = "channel_data.json"
