@@ -979,7 +979,6 @@ export default function App() {
           {tab === "settings" && <SettingsTab config={config} setConfig={setConfig} save={save} />}
         </div>
       </div>
-        );
-      }
     </div>
-  
+  );
+}
