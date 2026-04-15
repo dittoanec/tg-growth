@@ -15,7 +15,7 @@ Why not Bot API? The Bot API can't pull channel post history.
 Telethon uses the full Telegram MTProto API which CAN.
 """
 
-import json, os, sys, asyncio, urllib.parse, urllib.request
+import json, os, sys, asyncio, hmac, urllib.parse, urllib.request
 from datetime import datetime, timezone
 from collections import defaultdict
 from telethon import TelegramClient
@@ -30,7 +30,10 @@ if os.path.exists(_env_path):
             _line = _line.strip()
             if _line and not _line.startswith("#") and "=" in _line:
                 _k, _v = _line.split("=", 1)
-                os.environ.setdefault(_k.strip(), _v.strip())
+                _v = _v.strip()
+                if len(_v) >= 2 and _v[0] == _v[-1] and _v[0] in ('"', "'"):
+                    _v = _v[1:-1]
+                os.environ.setdefault(_k.strip(), _v)
 
 # ─── CONFIG ───
 API_ID = os.environ.get("TG_API_ID", "")
@@ -42,6 +45,20 @@ OUTPUT_FILE = "channel_data.json"
 TRACKED_FILE = "tracked_channels.json"
 POST_LIMIT = 200
 ALLOWED_ORIGIN = "http://localhost:5173"
+
+# ─── Shared Telegram client (single SQLite session — avoids file lock races) ───
+_shared_client = None
+_client_lock = None
+
+async def get_client():
+    global _shared_client, _client_lock
+    if _client_lock is None:
+        _client_lock = asyncio.Lock()
+    async with _client_lock:
+        if _shared_client is None:
+            _shared_client = TelegramClient("tg_growth_session", int(API_ID), API_HASH)
+            await _shared_client.start()
+        return _shared_client
 
 # ─── Shared helpers ───
 
@@ -242,8 +259,7 @@ async def main():
         print(f"   TG_API_ID=12345 TG_API_HASH=abc123 python {sys.argv[0]}")
         return
 
-    client = TelegramClient("tg_growth_session", int(API_ID), API_HASH)
-    await client.start()
+    client = await get_client()
     print(f"✅ Connected to Telegram as {(await client.get_me()).first_name}")
 
     # ─── 1. Collect own channel ───
@@ -416,12 +432,9 @@ async def main():
     print(f"\n📂 Copy {OUTPUT_FILE} and {TRACKED_FILE} to your tg-growth/public/ folder")
     print(f"   Then restart the dashboard (npm run dev)")
 
-    await client.disconnect()
-
 async def collect_single_channel(channel_name):
     """Collect a single channel on demand. Returns the channel data dict."""
-    client = TelegramClient("tg_growth_session", int(API_ID), API_HASH)
-    await client.start()
+    client = await get_client()
 
     name = channel_name.replace("@", "").replace("https://t.me/", "").replace("t.me/", "").strip()
     ch_entity, ch_posts = await collect_channel(client, name, POST_LIMIT)
@@ -450,14 +463,19 @@ async def collect_single_channel(channel_name):
         "daily_stats": compute_daily_stats(ch_posts),
     }
 
-    # Merge into tracked_channels.json
+    # Merge into tracked_channels.json — read BOTH files and merge (freshest entry wins)
+    # to avoid clobbering when only one of the two paths exists.
     existing = {}
     public_path = os.path.join("public", TRACKED_FILE)
     for path in [TRACKED_FILE, public_path]:
         if os.path.exists(path):
-            with open(path, "r") as f:
-                existing = json.load(f)
-            break
+            try:
+                with open(path, "r") as f:
+                    loaded = json.load(f)
+                for k, v in loaded.items():
+                    existing.setdefault(k, v)
+            except (json.JSONDecodeError, OSError):
+                pass
 
     existing[name] = ch_data
     for path in [TRACKED_FILE, public_path]:
@@ -475,7 +493,6 @@ async def collect_single_channel(channel_name):
         with open("tracked_list.json", "w") as f:
             json.dump(tracked_list, f, ensure_ascii=False, indent=2)
 
-    await client.disconnect()
     return ch_data
 
 
@@ -486,14 +503,14 @@ async def serve():
     from http.server import HTTPServer, BaseHTTPRequestHandler
     import threading
 
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
 
     class Handler(BaseHTTPRequestHandler):
         def _check_auth(self):
             if not COLLECTOR_TOKEN:
                 return True
             token = self.headers.get("Authorization", "").replace("Bearer ", "")
-            if token == COLLECTOR_TOKEN:
+            if hmac.compare_digest(token, COLLECTOR_TOKEN):
                 return True
             self._json_response(401, {"error": "Unauthorized — invalid or missing token"})
             return False
@@ -515,7 +532,11 @@ async def serve():
 
             if parsed.path == "/api/claude":
                 content_len = int(self.headers.get("Content-Length", 0))
-                body = json.loads(self.rfile.read(content_len)) if content_len else {}
+                try:
+                    body = json.loads(self.rfile.read(content_len)) if content_len else {}
+                except json.JSONDecodeError as e:
+                    self._json_response(400, {"error": f"Malformed JSON body: {e}"})
+                    return
                 system = body.get("system", "")
                 user = body.get("user", "")
                 max_tokens = body.get("max_tokens", 2000)
@@ -603,8 +624,7 @@ async def serve():
                 self._json_response(404, {"error": "Not found. Use /collect?channel=name or /status"})
 
         async def _collect_own(self, loop):
-            client = TelegramClient("tg_growth_session", int(API_ID), API_HASH)
-            await client.start()
+            client = await get_client()
 
             channel, posts = await collect_channel(client, CHANNEL, POST_LIMIT)
             daily_stats = compute_daily_stats(posts)
@@ -687,7 +707,6 @@ async def serve():
                     json.dump(output, f, ensure_ascii=False, indent=2)
 
             print(f"  ✅ Saved {len(posts)} posts to {OUTPUT_FILE} + public/{OUTPUT_FILE}")
-            await client.disconnect()
 
             return {
                 "ok": True,

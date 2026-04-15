@@ -355,6 +355,7 @@ function OverviewTab({ config, channelData }) {
     try {
       const data = await loadChannelData();
       const persona = store.get("tg-persona-profile", null);
+      let finalResult = null;
 
       if (!data || !data.daily_stats) {
         const r = await callClaude(
@@ -364,9 +365,10 @@ ${persona ? "Persona:\
 " + persona.slice(0, 600) : ""}\
 Since we don't have daily subscriber data yet, analyze content patterns that typically cause mutes/leaves in ${config.niche} channels. 6-8 bullets.`
         );
-        setSignalResult("⚠️ NO REAL POST DATA — results are generic estimates. Click Refresh to collect real data.\
+        finalResult = "⚠️ NO REAL POST DATA — results are generic estimates. Click Refresh to collect real data.\
 \
-" + r);
+" + r;
+        setSignalResult(finalResult);
       } else {
         const dailyStats = data.daily_stats, memberChanges = data.daily_member_changes || {};
         const days = Object.keys(dailyStats).sort();
@@ -406,11 +408,12 @@ Persona:\
 \
 Diagnose each anomaly day. 6-8 bullets.`
         );
+        finalResult = r;
         setSignalResult(r);
       }
-      store.set("tg-signal", signalResult);
+      store.set("tg-signal", finalResult);
       sendSlack(`📉 Signal Analysis\
-${signalResult?.slice(0, 500) || "done"}...`);
+${finalResult?.slice(0, 500) || "done"}...`);
     } catch (e) { setSignalResult(`Error: ${e.message}`); }
     setLoading(p => ({ ...p, signal: false }));
   };
