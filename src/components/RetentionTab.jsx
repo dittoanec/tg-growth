@@ -47,7 +47,7 @@ function TrendChart({ trend }) {
   const x = (i) => pad + (filtered.length === 1 ? plotW / 2 : (i / (filtered.length - 1)) * plotW);
   const y = (v) => pad + plotH / 2 - (v / max) * (plotH / 2);
 
-  const line = (accessor, color, dashed = false) => {
+  const renderSeries = (accessor, color, dashed = false) => {
     const d = filtered.map((p, i) => `${i === 0 ? "M" : "L"} ${x(i)} ${y(accessor(p))}`).join(" ");
     return <path d={d} fill="none" stroke={color} strokeWidth={2} strokeDasharray={dashed ? "4 3" : "0"} />;
   };
@@ -66,9 +66,9 @@ function TrendChart({ trend }) {
       </div>
       <svg width="100%" height={H} viewBox={`0 0 ${W} ${H}`} style={{ maxWidth: "100%" }}>
         <line x1={pad} y1={H / 2} x2={W - pad} y2={H / 2} stroke="#1a1a2a" />
-        {line(d => d.joins, "#34d399")}
-        {line(d => d.leaves, "#f87171")}
-        {line(d => d.net, "#60a5fa", true)}
+        {renderSeries(d => d.joins, "#34d399")}
+        {renderSeries(d => d.leaves, "#f87171")}
+        {renderSeries(d => d.net, "#60a5fa", true)}
       </svg>
       <div style={{ display: "flex", gap: 14, fontSize: 10, color: "#5a5a70", marginTop: 6 }}>
         <span><span style={{ color: "#34d399" }}>●</span> joins</span>
@@ -155,7 +155,7 @@ AMBIENT CHURN (not tied to any post): ${attribution.ambientLeaves} leaves, ${att
       });
       const d = await r.json();
       if (!d.ok) throw new Error(d.error || "Claude request failed");
-      setText(d.text);
+      setText(typeof d.text === "string" ? d.text : "");
     } catch (e) {
       setErr(e.message);
     }
