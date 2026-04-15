@@ -145,6 +145,33 @@ Tell them:
 
 ---
 
+## Tab Structure
+
+| Tab | Purpose | Cards |
+|---|---|---|
+| **Overview** | "How's my channel doing?" | Summary stats, recent posts, growth snapshot |
+| **Content** | "Which posts work?" | Engagement Patterns, Gap Report, Calendar |
+| **Audience** | "Who's following me?" | Persona, Reaction Decoder, Drift, Unified Profile |
+| **Retention** | "Who's leaving and why?" | Subscriber Trend, Top Churn-Triggering Posts, Top Inflow-Driving Posts, AI Retention Coach |
+| **Network** | "Who shares my content?" | Forward Chains, Tracked Channels, Topic Shift Radar |
+| **Settings** | Configuration | Channel, API keys, tokens |
+
+---
+
+## Scheduled Collection (launchd)
+
+The Retention tab needs continuous join/leave history because Telegram's admin log only retains the last ~48 hours of member events. A launchd agent runs `collect_data.py` every 12 hours to accumulate this history into `channel_data.json`.
+
+**Install:** `bash scripts/install_scheduler.sh` — copies a plist to `~/Library/LaunchAgents/`, substitutes absolute paths, loads via launchctl.
+
+**Check status:** `launchctl list | grep tggrowth`
+
+**Watch log:** `tail -f scheduler.log`
+
+**Uninstall:** `bash scripts/uninstall_scheduler.sh`
+
+The agent runs at project path, uses existing `.env` credentials, and does not require the user to be logged in (runs in user session, survives laptop sleep via launchd catch-up).
+
 ## Commands
 
 ### `start` / `run` / `start the dashboard`
@@ -188,6 +215,18 @@ curl -s -H "Authorization: Bearer $COLLECTOR_TOKEN" "http://localhost:3456/colle
 
 ### Anything else
 Interpret intent and help. Always use real data when available. Never fabricate metrics.
+
+### "install scheduler" or "schedule collection"
+Run `bash scripts/install_scheduler.sh` from the project root. Confirm output shows "✓ Scheduler installed" and that `launchctl list | grep tggrowth` returns a match.
+
+### "uninstall scheduler" or "stop scheduled collection"
+Run `bash scripts/uninstall_scheduler.sh`.
+
+### "retention" or "churn" or "who's leaving"
+If the dashboard is running, tell the user to click the Retention tab. If not, start it first (via the "start" command) then direct them there.
+
+### "analyze retention"
+Load `channel_data.json`, run attribution (posts vs `daily_member_changes`, 24h window), and report: top 5 churn-triggering posts, top 5 inflow-driving posts, ambient churn counts, 7-day and 30-day net change. Use real data only — if fewer than 3 days of member changes are recorded, tell the user the scheduled collector needs more time.
 
 ---
 

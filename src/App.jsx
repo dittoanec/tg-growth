@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import RetentionTab from "./components/RetentionTab.jsx";
 
 // ─── Config ───
 const TG_TOKEN = import.meta.env.VITE_TG_BOT_TOKEN || "";
@@ -861,6 +862,7 @@ const TABS = [
   { id: "overview", label: "Overview", icon: "📊" },
   { id: "content", label: "Content", icon: "📝" },
   { id: "audience", label: "Audience", icon: "👥" },
+  { id: "retention", label: "Retention", icon: "🔄" },
   { id: "network", label: "Network", icon: "🔗" },
   { id: "settings", label: "Settings", icon: "⚙️" },
 ];
@@ -972,11 +974,11 @@ export default function App() {
           {tab === "overview" && <OverviewTab config={config} channelData={channelData} />}
           {tab === "content" && <ContentTab config={config} channelData={channelData} />}
           {tab === "audience" && <AudienceTab config={config} channelData={channelData} />}
+          {tab === "retention" && <RetentionTab channelData={channelData} />}
           {tab === "network" && <NetworkTab config={config} channelData={channelData} />}
           {tab === "settings" && <SettingsTab config={config} setConfig={setConfig} save={save} />}
         </div>
       </div>
-        );
-      }
     </div>
-  
+  );
+}
