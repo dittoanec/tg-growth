@@ -177,8 +177,7 @@ function ResultBlock({ text }) {
   if (!text) return null;
   return (
     <div style={{ background: "#0a0a12", borderRadius: 8, padding: 16, fontSize: 13, color: "#b0b0c0", lineHeight: 1.7, whiteSpace: "pre-wrap", overflow: "auto", border: "1px solid #1a1a2a" }}>
-      {text.split("\
-").map((line, i) => {
+      {text.split("\n").map((line, i) => {
         const m = line.match(/^[-•*]\s*\*?\*?([A-Z][A-Z /]+):?\*?\*?\s*/);
         if (m) {
           const tag = m[1].trim(), rest = line.slice(m[0].length);
