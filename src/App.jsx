@@ -81,16 +81,13 @@ REACTION BREAKDOWN: ${JSON.stringify(reactionMap)}
 POSTING HOURS (KST): ${JSON.stringify(hourDist)}
 
 TOP 10 BY VIEWS:
-${topViews.map((p, i) => `${i+1}. [${p.views}v, ${p.forwards}fwd, ${p.reaction_total}r, ${p.media_type}] ${p.text.slice(0, 120)}...`).join("\
-")}
+${topViews.map((p, i) => `${i+1}. [${p.views}v, ${p.forwards}fwd, ${p.reaction_total}r, ${p.media_type}] ${p.text.slice(0, 120)}...`).join("\n")}
 
 TOP 5 BY FORWARDS:
-${topFwd.map((p, i) => `${i+1}. [${p.forwards}fwd, ${p.views}v] ${p.text.slice(0, 120)}...`).join("\
-")}
+${topFwd.map((p, i) => `${i+1}. [${p.forwards}fwd, ${p.views}v] ${p.text.slice(0, 120)}...`).join("\n")}
 
 LAST 10 POSTS:
-${posts.slice(-10).reverse().map((p, i) => `${i+1}. [${new Date(p.date).toISOString().slice(0,10)} | ${p.views}v | ${p.forwards}fwd | ${p.reaction_total}r | ${p.media_type}] ${p.text.slice(0, 150)}...`).join("\
-")}`;
+${posts.slice(-10).reverse().map((p, i) => `${i+1}. [${new Date(p.date).toISOString().slice(0,10)} | ${p.views}v | ${p.forwards}fwd | ${p.reaction_total}r | ${p.media_type}] ${p.text.slice(0, 150)}...`).join("\n")}`;
 }
 
 function summarizeTrackedChannel(chData) {
@@ -104,11 +101,11 @@ function summarizeTrackedChannel(chData) {
   return `COMPETITOR: ${s.title} (@${s.channel}) | Members: ${s.member_count} | Posts: ${s.total_posts_collected}
 ${s.stats ? `Avg views: ${s.stats.avg_views} | Max: ${s.stats.max_views} | Avg fwd: ${s.stats.avg_forwards} | Avg reactions: ${s.stats.avg_reactions}` : ""}
 Formats: ${JSON.stringify(formats)} | Hours: ${JSON.stringify(hourDist)}
-Top: ${topViews.map((p, i) => `\
+Top: ${topViews.map((p, i) => `
   ${i+1}. [${p.views}v, ${p.forwards}fwd] ${p.text.slice(0, 100)}`).join("")}
-Most fwd: ${topFwd.map((p, i) => `\
+Most fwd: ${topFwd.map((p, i) => `
   ${i+1}. [${p.forwards}fwd] ${p.text.slice(0, 100)}`).join("")}
-Recent: ${posts.slice(-5).reverse().map((p, i) => `\
+Recent: ${posts.slice(-5).reverse().map((p, i) => `
   ${i+1}. [${p.date.slice(0,10)} | ${p.views}v] ${p.text.slice(0, 80)}`).join("")}`;
 }
 
@@ -116,17 +113,15 @@ function summarizeForwardChains(data) {
   if (!data?.forward_chains) return null;
   const fc = data.forward_chains;
   if (!fc.chains?.length && !Object.keys(fc.amplifiers || {}).length) return null;
-  const amps = Object.entries(fc.amplifiers || {}).slice(0, 15).map(([u, i]) => `  @${u} — "${i.name}" (${i.count}x, ${i.total_views} views)`).join("\
-");
+  const amps = Object.entries(fc.amplifiers || {}).slice(0, 15).map(([u, i]) => `  @${u} — "${i.name}" (${i.count}x, ${i.total_views} views)`).join("\n");
   const chains = (fc.chains || []).slice(0, 10).map(c =>
-    `  Post #${c.post_id} [${c.post_views}v, ${c.post_forwards}fwd]: "${c.post_text.slice(0, 80)}..."\
+    `  Post #${c.post_id} [${c.post_views}v, ${c.post_forwards}fwd]: "${c.post_text.slice(0, 80)}..."
     -> ${c.forwarders.map(f => `@${f.channel}(${f.members}m)`).join(", ")}`
-  ).join("\
-");
-  return `FORWARD CHAIN DATA:\
-AMPLIFIERS:\
-${amps || "  None"}\
-CHAINS:\
+  ).join("\n");
+  return `FORWARD CHAIN DATA:
+AMPLIFIERS:
+${amps || "  None"}
+CHAINS:
 ${chains || "  None"}`;
 }
 
@@ -291,19 +286,19 @@ function AgentTabs({ context, title }) {
       const data = await loadChannelData();
       const rawData = summarizeForLLM(data);
       const prompt = rawData
-        ? `RAW CHANNEL DATA:\
-${rawData}\
-\
----\
-\
-PREVIOUS ANALYSIS (${title}):\
-${context}\
-\
+        ? `RAW CHANNEL DATA:
+${rawData}
+
+---
+
+PREVIOUS ANALYSIS (${title}):
+${context}
+
 Using BOTH the raw data and the previous analysis, provide 5-7 specific, actionable bullet points. Reference actual posts and numbers.`
-        : `Context: ${title}\
-\
-${context}\
-\
+        : `Context: ${title}
+
+${context}
+
 Provide 5-7 specific, actionable bullet points.`;
       const result = await callClaude(agent.system, prompt);
       setResults(p => ({ ...p, [agent.id]: result }));
@@ -359,14 +354,11 @@ function OverviewTab({ config, channelData }) {
       if (!data || !data.daily_stats) {
         const r = await callClaude(
           "You are a Telegram subscriber behavior analyst. Detect anomaly patterns. Use tags: ANOMALY DAY:, CAUSE:, CONTENT ISSUE:, HEALTHY CHURN:, GROWTH SPIKE:, PATTERN:, RECOMMENDATION:, WARNING:",
-          `Analyze subscriber signals for @${config.channelName} (${config.niche}, ${config.followerCount} members).\
-${persona ? "Persona:\
-" + persona.slice(0, 600) : ""}\
+          `Analyze subscriber signals for @${config.channelName} (${config.niche}, ${config.followerCount} members).
+${persona ? "Persona:\n" + persona.slice(0, 600) : ""}
 Since we don't have daily subscriber data yet, analyze content patterns that typically cause mutes/leaves in ${config.niche} channels. 6-8 bullets.`
         );
-        finalResult = "⚠️ NO REAL POST DATA — results are generic estimates. Click Refresh to collect real data.\
-\
-" + r;
+        finalResult = "⚠️ NO REAL POST DATA — results are generic estimates. Click Refresh to collect real data.\n\n" + r;
         setSignalResult(finalResult);
       } else {
         const dailyStats = data.daily_stats, memberChanges = data.daily_member_changes || {};
@@ -384,34 +376,29 @@ Since we don't have daily subscriber data yet, analyze content patterns that typ
           else if (mc.joins > 10 || mc.net > 5) sig = "GROWTH_SPIKE";
           else if (vr > 2.0) sig = "VIEW_SPIKE";
           if (sig) anomalies.push({ day, sig, views: s.avg_views, reactions: s.total_reactions, forwards: s.total_forwards, posts: s.posts, joins: mc.joins, leaves: mc.leaves, net: mc.net,
-            content: s.contents.map(c => `[${c.media_type}|${c.views}v|${c.reactions}r] ${c.text.slice(0, 100)}`).join("\
-") });
+            content: s.contents.map(c => `[${c.media_type}|${c.views}v|${c.reactions}r] ${c.text.slice(0, 100)}`).join("\n") });
         }
         const anomalyText = anomalies.length > 0
-          ? anomalies.map(a => `\
---- ${a.day} [${a.sig}] ---\
-Views: ${a.views} (avg: ${Math.round(avgViews)}) | Reactions: ${a.reactions} | Joins: ${a.joins} | Leaves: ${a.leaves} | Net: ${a.net}\
-Posts (${a.posts}):\
-${a.content}`).join("\
-")
-          : "\
-No strong anomalies detected. Analyze subtle patterns instead.";
+          ? anomalies.map(a => `
+--- ${a.day} [${a.sig}] ---
+Views: ${a.views} (avg: ${Math.round(avgViews)}) | Reactions: ${a.reactions} | Joins: ${a.joins} | Leaves: ${a.leaves} | Net: ${a.net}
+Posts (${a.posts}):
+${a.content}`).join("\n")
+          : "\nNo strong anomalies detected. Analyze subtle patterns instead.";
         const r = await callClaude(
           "You are a Telegram subscriber behavior analyst. Analyze anomaly days and explain WHY. Use tags: ANOMALY DAY:, CAUSE:, CONTENT ISSUE:, HEALTHY CHURN:, GROWTH SPIKE:, PATTERN:, RECOMMENDATION:, WARNING:",
-          `REAL DATA for @${config.channelName} (${config.niche}):\
-Averages: ${Math.round(avgViews)} views/post, ${Math.round(avgReactions)} reactions/day | Days: ${days.length} | Anomalies: ${anomalies.length}\
-${anomalyText}\
-${persona ? "\
-Persona:\
-" + persona.slice(0, 400) : ""}\
-\
+          `REAL DATA for @${config.channelName} (${config.niche}):
+Averages: ${Math.round(avgViews)} views/post, ${Math.round(avgReactions)} reactions/day | Days: ${days.length} | Anomalies: ${anomalies.length}
+${anomalyText}
+${persona ? "\nPersona:\n" + persona.slice(0, 400) : ""}
+
 Diagnose each anomaly day. 6-8 bullets.`
         );
         finalResult = r;
         setSignalResult(r);
       }
       store.set("tg-signal", finalResult);
-      sendSlack(`📉 Signal Analysis\
+      sendSlack(`📉 Signal Analysis
 ${finalResult?.slice(0, 500) || "done"}...`);
     } catch (e) { setSignalResult(`Error: ${e.message}`); }
     setLoading(p => ({ ...p, signal: false }));
@@ -436,17 +423,15 @@ function ContentTab({ config, channelData }) {
       const data = await loadChannelData();
       const realData = summarizeForLLM(data);
       const hasReal = !!realData;
-      const extra = realData ? `\
-\
-${realData}\
-\
-IMPORTANT: Use the REAL DATA above. Do NOT guess.\
-\
+      const extra = realData ? `
+
+${realData}
+
+IMPORTANT: Use the REAL DATA above. Do NOT guess.
+
 ` : "";
       const result = await callClaude(system, extra + prompt);
-      const warn = hasReal ? "" : "⚠️ NO REAL POST DATA — results are generic estimates. Click Refresh to collect real data.\
-\
-";
+      const warn = hasReal ? "" : "⚠️ NO REAL POST DATA — results are generic estimates. Click Refresh to collect real data.\n\n";
       setResults(p => ({ ...p, [key]: warn + result }));
       if (storeKey) store.set(storeKey, warn + result);
     } catch (e) { setResults(p => ({ ...p, [key]: `Error: ${e.message}` })); }
@@ -466,20 +451,17 @@ IMPORTANT: Use the REAL DATA above. Do NOT guess.\
       const realData = summarizeForLLM(data);
       const persona = store.get("tg-persona-profile", null);
       const r = await callClaude("You are a Telegram growth analyst. Use tags: CONTENT GAP:, TOPIC GAP:, FORMAT GAP:, ENGAGEMENT DRIFT:, SUGGESTION:.",
-        `Weekly gap report for @${config.channelName} (${config.niche}).\
-${realData ? `\
-${realData}\
-\
-Use REAL DATA. Compare actual posts vs persona to find gaps.\
-` : ""}\
-${persona ? "Persona:\
-" + persona.slice(0, 800) : "No persona yet."}\
+        `Weekly gap report for @${config.channelName} (${config.niche}).
+${realData ? `
+${realData}
+
+Use REAL DATA. Compare actual posts vs persona to find gaps.
+` : ""}
+${persona ? "Persona:\n" + persona.slice(0, 800) : "No persona yet."}
 6-8 bullets.`);
-      const warn = realData ? "" : "⚠️ NO REAL POST DATA — generic estimates.\
-\
-";
+      const warn = realData ? "" : "⚠️ NO REAL POST DATA — generic estimates.\n\n";
       setResults(p => ({ ...p, gap: warn + r })); store.set("tg-gap", warn + r);
-      sendSlack(`🧠 Gap Report\
+      sendSlack(`🧠 Gap Report
 ${r.slice(0, 500)}...`);
     } catch (e) { setResults(p => ({ ...p, gap: `Error: ${e.message}` })); }
     setLoading(p => ({ ...p, gap: false }));
@@ -503,17 +485,15 @@ function AudienceTab({ config, channelData }) {
       const data = await loadChannelData();
       const realData = summarizeForLLM(data);
       const hasReal = !!realData;
-      const extra = realData ? `\
-\
-${realData}\
-\
-IMPORTANT: Use the REAL DATA above.\
-\
+      const extra = realData ? `
+
+${realData}
+
+IMPORTANT: Use the REAL DATA above.
+
 ` : "";
       const result = await callClaude(system, extra + prompt);
-      const warn = hasReal ? "" : "⚠️ NO REAL POST DATA — generic estimates.\
-\
-";
+      const warn = hasReal ? "" : "⚠️ NO REAL POST DATA — generic estimates.\n\n";
       setResults(p => ({ ...p, [key]: warn + result }));
       if (storeKey) store.set(storeKey, warn + result);
     } catch (e) { setResults(p => ({ ...p, [key]: `Error: ${e.message}` })); }
@@ -522,11 +502,11 @@ IMPORTANT: Use the REAL DATA above.\
 
   const runPersona = () => runWithData("persona",
     "You are a Telegram audience researcher. Build a behavioral persona from engagement patterns. Use tags: PERSONA:, DEMAND:, SENTIMENT:, RECURRING:, CONTENT REQUEST:. IMPORTANT: Only analyze patterns visible in the data. Do NOT invent comment data.",
-    `Build a follower persona for @${config.channelName || "channel"} (${config.niche}) based on engagement data.\
-1. Which topics get highest views? (what audience seeks)\
-2. Which posts get most reactions? (emotional triggers)\
-3. Which get forwarded? (public identity)\
-4. Which get ignored? (what they don't care about)\
+    `Build a follower persona for @${config.channelName || "channel"} (${config.niche}) based on engagement data.
+1. Which topics get highest views? (what audience seeks)
+2. Which posts get most reactions? (emotional triggers)
+3. Which get forwarded? (public identity)
+4. Which get ignored? (what they don't care about)
 5-7 insights grounded in actual performance data.`
   );
 
@@ -537,40 +517,36 @@ IMPORTANT: Use the REAL DATA above.\
       let detail = "";
       if (data?.posts) {
         const byR = [...data.posts].sort((a, b) => b.reaction_total - a.reaction_total).slice(0, 15);
-        detail = `\
-\
-TOP 15 MOST-REACTED POSTS:\
-` + byR.map((p, i) => `${i+1}. [${p.reaction_total} total: ${p.reactions.map(r => `${r.emoji}${r.count}`).join(" ")} | ${p.views}v | ${p.media_type}]\
-   "${p.text.slice(0, 150)}"`).join("\
-");
+        detail = `
+
+TOP 15 MOST-REACTED POSTS:
+` + byR.map((p, i) => `${i+1}. [${p.reaction_total} total: ${p.reactions.map(r => `${r.emoji}${r.count}`).join(" ")} | ${p.views}v | ${p.media_type}]
+   "${p.text.slice(0, 150)}"`).join("\n");
         const low = [...data.posts].filter(p => p.views > 0).sort((a, b) => (a.reaction_total/a.views) - (b.reaction_total/b.views)).slice(0, 10);
-        detail += `\
-\
-LOWEST REACTION RATE (high views, low reactions):\
-` + low.map((p, i) => `${i+1}. [${p.reaction_total}r / ${p.views}v = ${(p.reaction_total/p.views*100).toFixed(1)}% | ${p.media_type}]\
-   "${p.text.slice(0, 120)}"`).join("\
-");
+        detail += `
+
+LOWEST REACTION RATE (high views, low reactions):
+` + low.map((p, i) => `${i+1}. [${p.reaction_total}r / ${p.views}v = ${(p.reaction_total/p.views*100).toFixed(1)}% | ${p.media_type}]
+   "${p.text.slice(0, 120)}"`).join("\n");
       }
       const realData = summarizeForLLM(data);
-      const extra = realData ? `\
-\
-${realData}${detail}\
-\
-Use REAL DATA. Only reference actual reactions.\
-\
+      const extra = realData ? `
+
+${realData}${detail}
+
+Use REAL DATA. Only reference actual reactions.
+
 ` : "";
       const result = await callClaude(
         "You are a Telegram reaction analyst. Map reaction emoji clusters to content using ACTUAL per-post data. Use tags: SIGNAL:, PATTERN:, SHIFT:, INSIGHT:. Do not invent examples.",
-        extra + `Decode reactions for @${config.channelName} (${config.niche}).\
-1. Which emojis dominate and on what content?\
-2. Posts with diverse vs single-emoji reactions?\
-3. High-view + low-reaction meaning?\
-4. Sentiment mismatches?\
+        extra + `Decode reactions for @${config.channelName} (${config.niche}).
+1. Which emojis dominate and on what content?
+2. Posts with diverse vs single-emoji reactions?
+3. High-view + low-reaction meaning?
+4. Sentiment mismatches?
 5-6 insights with actual post references.`
       );
-      const warn = realData ? "" : "⚠️ NO REAL DATA.\
-\
-";
+      const warn = realData ? "" : "⚠️ NO REAL DATA.\n\n";
       setResults(p => ({ ...p, reactions: warn + result }));
     } catch (e) { setResults(p => ({ ...p, reactions: `Error: ${e.message}` })); }
     setLoading(p => ({ ...p, reactions: false }));
@@ -583,36 +559,31 @@ Use REAL DATA. Only reference actual reactions.\
       const realData = summarizeForLLM(data);
       const persona = store.get("tg-persona-profile", null);
       const r = await callClaude("You detect audience persona drift. Use tags: SHIFT DETECTED:, STABLE:, EMERGING INTEREST:, DECLINING INTEREST:, RECOMMENDATION:",
-        `Drift detection for @${config.channelName} (${config.niche}).\
-${realData ? `\
-${realData}\
-\
-Compare older vs newer posts to detect actual drift.\
-` : ""}\
-${persona ? "Persona:\
-" + persona.slice(0, 600) : ""}\
+        `Drift detection for @${config.channelName} (${config.niche}).
+${realData ? `
+${realData}
+
+Compare older vs newer posts to detect actual drift.
+` : ""}
+${persona ? "Persona:\n" + persona.slice(0, 600) : ""}
 5-6 bullets.`);
-      const warn = realData ? "" : "⚠️ NO REAL DATA.\
-\
-";
+      const warn = realData ? "" : "⚠️ NO REAL DATA.\n\n";
       setResults(p => ({ ...p, drift: warn + r }));
     } catch (e) { setResults(p => ({ ...p, drift: `Error: ${e.message}` })); }
     setLoading(p => ({ ...p, drift: false }));
   };
 
   const buildProfile = async () => {
-    const inputs = [results.persona, results.reactions, results.drift].filter(Boolean).join("\
----\
-");
+    const inputs = [results.persona, results.reactions, results.drift].filter(Boolean).join("\n---\n");
     if (!inputs) { setResults(p => ({ ...p, profile: "⚠️ Run at least one analysis above first before building a unified profile." })); return; }
     setLoading(p => ({ ...p, profile: true }));
     try {
       const data = await loadChannelData();
       const realData = summarizeForLLM(data);
-      const extra = realData ? `\
-\
-${realData}\
-\
+      const extra = realData ? `
+
+${realData}
+
 ` : "";
       const r = await callClaude(
         "Synthesize into a unified persona profile. Format: ## Persona Summary, ## Content Preferences, ## Engagement Triggers, ## Unmet Demands, ## Strategic Recommendations. Only include data-supported insights.",
@@ -620,7 +591,7 @@ ${realData}\
       );
       setResults(p => ({ ...p, profile: r }));
       store.set("tg-persona-profile", r);
-      sendSlack(`👥 Persona updated\
+      sendSlack(`👥 Persona updated
 ${r.slice(0, 500)}...`);
     } catch (e) { setResults(p => ({ ...p, profile: `Error: ${e.message}` })); }
     setLoading(p => ({ ...p, profile: false }));
@@ -675,17 +646,17 @@ function NetworkTab({ config, channelData }) {
       compPosts.forEach(p => { const h = new Date(p.date).getHours(); compHours[h] = (compHours[h] || 0) + 1; });
       const r = await callClaude(
         "You are a Telegram channel synergy analyst. Use tags: OVERLAP:, THEIR AUDIENCE LOVES:, FORWARD OPPORTUNITY:, CONTENT BRIDGE:, SYNERGY:, GAP:",
-        `SYNERGY ANALYSIS:\
-═══ MY CHANNEL ═══\
-${realData}\
-\
-═══ @${name} ═══\
-${compData}\
-THEIR TOP 10: ${compTopViews.map((p, i) => `\
-${i+1}. [${p.views}v, ${p.forwards}fwd] ${p.text.slice(0, 150)}`).join("")}\
-THEIR FORMATS: ${JSON.stringify(compFormats)}\
-THEIR HOURS: ${JSON.stringify(compHours)}\
-\
+        `SYNERGY ANALYSIS:
+═══ MY CHANNEL ═══
+${realData}
+
+═══ @${name} ═══
+${compData}
+THEIR TOP 10: ${compTopViews.map((p, i) => `
+${i+1}. [${p.views}v, ${p.forwards}fwd] ${p.text.slice(0, 150)}`).join("")}
+THEIR FORMATS: ${JSON.stringify(compFormats)}
+THEIR HOURS: ${JSON.stringify(compHours)}
+
 6-8 bullets. Reference actual posts.`
       );
       setAnalyses(p => ({ ...p, [name]: r }));
@@ -706,21 +677,19 @@ THEIR HOURS: ${JSON.stringify(compHours)}\
       bot20.forEach(p => { botFmt[p.media_type] = (botFmt[p.media_type] || 0) + 1; });
       const r = await callClaude(
         "You are a Telegram forward/distribution analyst. Use tags: AMPLIFIER PATTERN:, FORWARD TRIGGER:, DEAD CONTENT:, OPPORTUNITY:, ACTION:, VIRAL ELEMENT:. Reference actual posts.",
-        `FORWARD ANALYSIS for @${data.summary.channel}:\
-Total: ${all.length} posts | With forwards: ${withFwd.length} | Total forwards: ${withFwd.reduce((s, p) => s + p.forwards, 0)}\
-\
-TOP 20 FORWARDED:\
-${top20.map((p, i) => `${i+1}. [${p.forwards}fwd | ${p.views}v | ${p.media_type} | ${p.text_length}ch]\
-   "${p.text.slice(0, 200)}"`).join("\
-")}\
-\
-BOTTOM 20:\
-${bot20.map((p, i) => `${i+1}. [${p.forwards}fwd | ${p.views}v | ${p.media_type}] "${p.text.slice(0, 120)}"`).join("\
-")}\
-\
-Top formats: ${JSON.stringify(topFmt)} | Bottom: ${JSON.stringify(botFmt)}\
-${chainData || ""}\
-\
+        `FORWARD ANALYSIS for @${data.summary.channel}:
+Total: ${all.length} posts | With forwards: ${withFwd.length} | Total forwards: ${withFwd.reduce((s, p) => s + p.forwards, 0)}
+
+TOP 20 FORWARDED:
+${top20.map((p, i) => `${i+1}. [${p.forwards}fwd | ${p.views}v | ${p.media_type} | ${p.text_length}ch]
+   "${p.text.slice(0, 200)}"`).join("\n")}
+
+BOTTOM 20:
+${bot20.map((p, i) => `${i+1}. [${p.forwards}fwd | ${p.views}v | ${p.media_type}] "${p.text.slice(0, 120)}"`).join("\n")}
+
+Top formats: ${JSON.stringify(topFmt)} | Bottom: ${JSON.stringify(botFmt)}
+${chainData || ""}
+
 6-8 bullets citing actual posts.`
       );
       setForwardResult(r); store.set("tg-forwards", r);
@@ -739,38 +708,36 @@ ${chainData || ""}\
       const topicSummary = (arr, label) => {
         const fmt = {}; arr.forEach(p => { fmt[p.media_type] = (fmt[p.media_type] || 0) + 1; });
         const top = [...arr].sort((a, b) => b.views - a.views).slice(0, 5);
-        return `${label} (${arr[0]?.date?.slice(0,10)} → ${arr[arr.length-1]?.date?.slice(0,10)}, ${arr.length} posts):\
-  Avg views: ${Math.round(arr.reduce((s, p) => s + p.views, 0) / arr.length)} | Formats: ${JSON.stringify(fmt)}\
-  Top:\
-${top.map((p, i) => `    ${i+1}. [${p.views}v] ${p.text.slice(0, 120)}`).join("\
-")}\
-  Recent:\
-${arr.slice(-10).map(p => `    - ${p.text.slice(0, 80)}`).join("\
-")}`;
+        return `${label} (${arr[0]?.date?.slice(0,10)} → ${arr[arr.length-1]?.date?.slice(0,10)}, ${arr.length} posts):
+  Avg views: ${Math.round(arr.reduce((s, p) => s + p.views, 0) / arr.length)} | Formats: ${JSON.stringify(fmt)}
+  Top:
+${top.map((p, i) => `    ${i+1}. [${p.views}v] ${p.text.slice(0, 120)}`).join("\n")}
+  Recent:
+${arr.slice(-10).map(p => `    - ${p.text.slice(0, 80)}`).join("\n")}`;
       };
       let compSection = "";
       if (trackedAll) {
         for (const ch of tracked) {
           const cd = trackedAll[ch.name]; if (!cd || cd.error || !cd.posts?.length) continue;
           const cp = cd.posts, cm = Math.floor(cp.length / 2);
-          compSection += `\
-\
-═══ @${ch.name} ═══\
+          compSection += `
+
+═══ @${ch.name} ═══
 ${topicSummary(cp.slice(cm), "RECENT")}`;
         }
       }
       const r = await callClaude(
         "You are a topic shift analyst. Use tags: EMERGING:, DECLINING:, SHIFT:, SATURATION:, OPPORTUNITY:, CROSS-CHANNEL:. Cite actual posts.",
-        `TOPIC SHIFT for @${data.summary.channel} (${config.niche}):\
-═══ OLDER ═══\
-${topicSummary(older, "OLDER")}\
-═══ RECENT ═══\
-${topicSummary(newer, "RECENT")}${compSection}\
-\
+        `TOPIC SHIFT for @${data.summary.channel} (${config.niche}):
+═══ OLDER ═══
+${topicSummary(older, "OLDER")}
+═══ RECENT ═══
+${topicSummary(newer, "RECENT")}${compSection}
+
 6-8 bullets.`
       );
       setShiftResult(r); store.set("tg-shifts", r);
-      sendSlack(`🔍 Topic Shift\
+      sendSlack(`🔍 Topic Shift
 ${r.slice(0, 500)}...`);
     } catch (e) { setShiftResult(`Error: ${e.message}`); }
     setLoading(p => ({ ...p, shift: false }));
